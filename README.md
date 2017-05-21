@@ -8,5 +8,6 @@ pygame (pip install pygame)
 clique gauche : ajouter cellule 
 clique droit : supprimer cellule
 (plusieurs cellules si clique maintenu)
+
 r : randomiser la grille
 espace : pause
