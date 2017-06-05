@@ -1,70 +1,56 @@
 import sys
 import random
+from itertools import chain
 import pygame
 from cellule import Cellule
+
 def init_grid(supergrid):
-    for grid in supergrid:
-        for cell in grid:
-            cell.draw_cellule()
+    #for grid in supergrid:
+    #    for cell in grid:
+    for cell in chain.from_iterable(supergrid):
+        cell.draw_cellule()
 
-def set_cellule_rand(supergrid, settings):
-    for grid in supergrid:
-        for cell in grid:
-            if random.randrange(2):
-                cell.alive = True
-            else:
-                cell.alive = False
-            cell.update(settings)
-def set_group(supergrid, grp_to_update):
-    for grid in supergrid:
-        for cell in grid:
-            cell.alive_neigbr()
-            if cell.alive:
-                grp_to_update.add(cell)
-                for neigbr in cell.neighbour:
-                    grp_to_update.add(neigbr)
-
-    
-
-def update_grp(grp_to_update):
-    grp = grp_to_update.copy()
-    grp_to_update.empty()
-    for cell in grp:
-        cell.alive_neigbr()
-        if cell.alive:
-            grp_to_update.add(cell)
-            for neigbr in cell.neighbour:
-                grp_to_update.add(neigbr)
-
-def check_event(supergrid, settings, grp_to_update):
-    """fonction generique de gestion des events"""
+def set_cells_rand(supergrid, settings):
+    #for grid in supergrid:
+    #    for cell in grid:
+    for cell in chain.from_iterable(supergrid):
+        if random.randrange(2):
+            cell.alive = True
+        else:
+            cell.alive = False
+        cell.update(settings)
+def check_event(supergrid, settings):
+    """will check keyboard event
+    """
     for event in pygame.event.get():
         if event.type == pygame.QUIT :
             sys.exit()
+        #mouse button left : alive cell
         if pygame.mouse.get_pressed()[0]:
-            for grid in supergrid:
-                for cell in grid:
-                    if cell.rect.collidepoint(pygame.mouse.get_pos()):
-                        cell.alive = True
-                        cell.update(settings)
+            for cell in chain.from_iterable(supergrid):
+                if cell.rect.collidepoint(pygame.mouse.get_pos()):
+                    cell.alive = True
+                    cell.update(settings)
+        #mouse button right : dead cell
         elif pygame.mouse.get_pressed()[2]:
-            for grid in supergrid:
-                for cell in grid:
-                    if cell.rect.collidepoint(pygame.mouse.get_pos()):
-                        cell.alive = False
-                        cell.update(settings)
-                        
+            for cell in chain.from_iterable(supergrid):
+                if cell.rect.collidepoint(pygame.mouse.get_pos()):
+                    cell.alive = False
+                    cell.update(settings)
+        #space button : start / pause
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 if settings.run_game:
                     settings.run_game = False
                 else:
                     settings.run_game = True
-                    set_group(supergrid, grp_to_update)
+        #r button : randomized
             elif event.key == pygame.K_r:
-                set_cellule_rand(supergrid, settings)
-def create_cellule(screen, settings, supergrid, grid, pos):
-    """fonction qui va cree et positionner les cellules selon les paramètres"""
+                set_cells_rand(supergrid, settings)
+
+def create_cells(screen, settings, supergrid, pos):
+    """create and place the cells accordings to the parameters'"""
+    grid = []
     while pos[1] <= settings.screen_height:
         new_cell = Cellule(screen, settings, pos)
         grid.append(new_cell)
@@ -80,8 +66,8 @@ def create_cellule(screen, settings, supergrid, grid, pos):
         else:
             pos = (pos[0]+settings.rect_dim+settings.espacement, pos[1])
 
-def check_neighbour(supergrid):
-    """check the neighbourhood of each cellule"""
+def create_neighbour(supergrid):
+    """create the neighbourhood of each cell"""
     for i, grid in enumerate(supergrid):
         for j, cell in enumerate(grid):
             if j != 0:
@@ -110,18 +96,11 @@ def check_neighbour(supergrid):
                 #down
                 cell.neighbour.append(supergrid[i+1][j])
 
-def update_screen(screen, settings,  grp_to_update, supergrid):
-    #screen.fill(settings.color_bg)
+def update_screen(screen, settings, supergrid):
     if settings.run_game:
-        """smarthly updated cell (don't really work)
-        grp_to_update.update(settings)
-        update_grp(grp_to_update)"""
-        """full retard way"""
-        for grid in supergrid:
-            for cell in grid:
-                cell.update(settings)
-        for grid in supergrid:
-            for cell in grid:
-                cell.alive_neigbr()
-
+        for cell in chain.from_iterable(supergrid):
+            cell.alive_neigbr()
+        for cell in chain.from_iterable(supergrid):
+            cell.update(settings)
+            
     pygame.display.flip()
